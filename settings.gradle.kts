@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "HanoiTower"
-include ':app'
+include(":app")
