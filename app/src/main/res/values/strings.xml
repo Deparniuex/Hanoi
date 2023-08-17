@@ -1,8 +1,14 @@
 <resources>
     <string name="app_name">HanoiTower</string>
+<<<<<<< HEAD
     <string name="activity_game_title">Ханойские башни</string>
     <string name="exit_menu_dialog">Выйти в меню?</string>
     <string name="exit_menu_dialog_message">Текущий прогресс будет потерян</string>
     <string name="positive_button">Окей</string>
     <string name="negative_button">Отмена</string>
+=======
+    <string name="menu_choice_text">Кол-во колец</string>
+    <string name="menu_edit_text">3</string>
+    <string name="menu_game_start">Начать игру</string>
+>>>>>>> main
 </resources>
