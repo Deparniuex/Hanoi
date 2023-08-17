@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">HanoiTower</string>
+    <string name="menu_choice_text">Кол-во колец</string>
+    <string name="menu_edit_text">3</string>
+    <string name="menu_game_start">Начать игру</string>
 </resources>
