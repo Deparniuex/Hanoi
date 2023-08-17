@@ -1,7 +1,6 @@
 package com.hanoitower;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,6 +14,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.viewmodel.CreationExtras;
 
 public class GameActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -25,7 +25,9 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
         this.<ImageButton>findViewById(R.id.exit_to_menu).setOnClickListener(this);
-        stateHolder = new ViewModelProvider(this).get(StateHolder.class);
+        stateHolder = new ViewModelProvider(this,
+                new StateHolderFactory(getIntent().getIntExtra("rings", 0))
+        ).get(StateHolder.class);
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -36,13 +38,16 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-
+        if (view.getId() == R.id.exit_to_menu)
+            showExitMenuDialog();
+        else if (view.getId() == R.id.help)
+            showHelpDialog();
     }
 
     private void showExitMenuDialog() {
         DialogInterface.OnClickListener listener = (dialog, button) -> {
             if (button == Dialog.BUTTON_POSITIVE) {
-                startActivity(new Intent(GameActivity.this, GameActivity.class)); // TODO go to menu
+                startActivity(new Intent(GameActivity.this, MenuActivity.class));
                 finish();
             }
         };
@@ -54,8 +59,38 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                 .setPositiveButton(R.string.positive_button, listener)
                 .show();
     }
+
+    private void showHelpDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.help_dialog)
+                .setMessage(R.string.game_help_dialog_message)
+                .setCancelable(true)
+                .setPositiveButton(R.string.positive_button, null)
+                .show();
+    }
+}
+
+class StateHolderFactory implements ViewModelProvider.Factory {
+
+    private final int rings;
+
+    public StateHolderFactory(int rings) {
+        this.rings = rings;
+    }
+
+    @SuppressWarnings("unchecked")
+    @NonNull
+    @Override
+    public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
+        return StateHolder.class.isAssignableFrom(modelClass) ?
+                (T) new StateHolder(rings) : ViewModelProvider.Factory.super.create(modelClass);
+    }
 }
 
 class StateHolder extends ViewModel {
+    private final int rings;
 
+    public StateHolder(int rings) {
+        this.rings = rings;
+    }
 }

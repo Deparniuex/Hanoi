@@ -8,4 +8,6 @@
     <string name="menu_choice_text">Кол-во колец</string>
     <string name="menu_edit_text">3</string>
     <string name="menu_game_start">Начать игру</string>
+    <string name="help_dialog">Справка</string>
+    <string name="game_help_dialog_message">Жмите на одну башню, а затем на другую</string> <!-- TODO cringe message -->
 </resources>
