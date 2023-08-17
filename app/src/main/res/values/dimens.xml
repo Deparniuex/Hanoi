@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="action_bar_horizontal_insets">16dp</dimen>
+    <dimen name="action_bar_button_size">32dp</dimen>
+
+</resources>
