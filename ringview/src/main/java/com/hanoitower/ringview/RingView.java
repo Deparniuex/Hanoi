@@ -52,11 +52,11 @@ public class RingView extends View {
     @Override
     protected void onDraw(@NonNull Canvas canvas) { // TODO should i clear canvas before drawing?
         float
-                gap = getWidth() * (ringLevel + 1) / (ringMaxLevel + 1f) / 2,
+                gap = (getWidth() - (float) getWidth() * ringLevel / ringMaxLevel) / 2,
                 radius = getHeight() / 2f;
         paint.setColor(ringColor.getColorForState(getDrawableState(), ringColor.getDefaultColor()));
         canvas.drawRoundRect(
-                gap, 0, getWidth() - gap, getHeight() - 1,
+                gap, 0, getWidth() - gap, getHeight() - 1, // actually getHeight() is still in y bounds
                 radius, radius,
                 paint
         );
@@ -68,6 +68,7 @@ public class RingView extends View {
 
     public void setRingColor(ColorStateList ringColor) {
         this.ringColor = ringColor;
+        invalidate();
     }
 
     public int getRingLevel() {
@@ -76,6 +77,7 @@ public class RingView extends View {
 
     public void setRingLevel(int ringLevel) {
         this.ringLevel = ringLevel;
+        invalidate();
     }
 
     public int getRingMaxLevel() {
@@ -84,6 +86,7 @@ public class RingView extends View {
 
     public void setRingMaxLevel(int ringMaxLevel) {
         this.ringMaxLevel = ringMaxLevel;
+        invalidate();
     }
 
     public boolean isAtPointer() {
@@ -92,5 +95,6 @@ public class RingView extends View {
 
     public void setAtPointer(boolean atPointer) {
         this.isAtPointer = atPointer;
+        invalidate();
     }
 }
