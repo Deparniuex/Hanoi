@@ -24,7 +24,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
-        this.<ImageButton>findViewById(R.id.exit_to_menu).setOnClickListener(this);
+        findViewById(R.id.exit_to_menu).setOnClickListener(this);
+        findViewById(R.id.help).setOnClickListener(this);
         stateHolder = new ViewModelProvider(this,
                 new StateHolderFactory(getIntent().getIntExtra("rings", 0))
         ).get(StateHolder.class);
