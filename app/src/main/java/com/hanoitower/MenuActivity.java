@@ -31,7 +31,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
             }
             else {
                 Intent intent = new Intent(this, GameActivity.class);
-                intent.putExtra("rings", 3);
+                intent.putExtra("rings", Integer.parseInt(ringCount.getText().toString()));
                 startActivity(intent);
                 finish();
             }
