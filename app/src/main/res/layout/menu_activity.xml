@@ -55,11 +55,13 @@
                     android:layout_height="@dimen/action_bar_button_size">
                 </ImageButton>
                 <EditText
+                    android:id="@+id/menu_edit_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:layout_marginHorizontal="8dp"
                     android:inputType="number"
+                    android:maxLength="1"
                     android:imeOptions="actionDone"
                     android:text="@string/menu_edit_text">
                 </EditText>

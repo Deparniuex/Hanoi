@@ -9,5 +9,7 @@
     <string name="menu_edit_text">3</string>
     <string name="menu_game_start">Начать игру</string>
     <string name="help_dialog">Справка</string>
+    <string name="invalid_dialog">Ошибка</string>
+    <string name="invalid_dialog_message">Введите значение колец от 3 до 9</string>
     <string name="game_help_dialog_message">Жмите на одну башню, а затем на другую</string> <!-- TODO cringe message -->
 </resources>
