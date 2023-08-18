@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -20,6 +21,8 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.menu_activity);
         ringCount = (EditText) findViewById(R.id.menu_edit_text);
         this.findViewById(R.id.menu_game_start).setOnClickListener(this);
+        this.findViewById(R.id.plus_button).setOnClickListener(this);
+        this.findViewById(R.id.negative_button).setOnClickListener(this);
     }
 
     @SuppressLint("NonConstantResourceId")
@@ -36,8 +39,27 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
                 finish();
             }
         }
+        if (view.getId() == R.id.plus_button) {
+            checkEmpty(ringCount);
+            if (Integer.parseInt(ringCount.getText().toString()) == 9){
+                ringCount.setText("2");
+            }
+             ringCount.setText(String.valueOf(Integer.parseInt(ringCount.getText().toString()) + 1));
+        }
+        if (view.getId() == R.id.negative_button) {
+            checkEmpty(ringCount);
+            if (Integer.parseInt(ringCount.getText().toString()) <= 3){
+                ringCount.setText("4");
+            }
+            ringCount.setText(String.valueOf(Integer.parseInt(ringCount.getText().toString()) - 1));
+        }
     }
 
+    private void checkEmpty(EditText editText){
+        if (editText.getText().toString().isEmpty()) {
+            ringCount.setText("0");
+        }
+    }
     private void showInvalidInputDialog(){
         new AlertDialog.Builder(this)
                 .setTitle(R.string.invalid_dialog)

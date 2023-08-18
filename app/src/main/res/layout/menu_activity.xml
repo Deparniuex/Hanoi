@@ -18,16 +18,18 @@
             <ImageButton
                 android:layout_width="@dimen/action_bar_button_size"
                 android:layout_height="@dimen/action_bar_button_size"
-                android:layout_gravity="start"/>
+                android:layout_gravity="start"
+                android:src="@drawable/ic_arrow_back"/>
             <ImageButton
                 android:layout_width="@dimen/action_bar_button_size"
                 android:layout_height="@dimen/action_bar_button_size"
-                android:layout_gravity="end"/>
+                android:layout_gravity="end"
+                android:src="@drawable/ic_info"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="@string/app_name"/>
+                android:text="@string/activity_game_title"/>
         </FrameLayout>
     </androidx.appcompat.widget.Toolbar>
     <FrameLayout
@@ -51,6 +53,8 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
                 <ImageButton
+                    android:id="@+id/negative_button"
+                    android:src="@drawable/ic_neg"
                     android:layout_width="@dimen/action_bar_button_size"
                     android:layout_height="@dimen/action_bar_button_size">
                 </ImageButton>
@@ -66,6 +70,8 @@
                     android:text="@string/menu_edit_text">
                 </EditText>
                 <ImageButton
+                    android:id="@+id/plus_button"
+                    android:src="@drawable/ic_plus"
                     android:layout_width="@dimen/action_bar_button_size"
                     android:layout_height="@dimen/action_bar_button_size">
                 </ImageButton>
