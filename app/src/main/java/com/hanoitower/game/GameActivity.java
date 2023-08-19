@@ -78,6 +78,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         stateHolder.chosenTower.observe(this, chosenTower -> IntStream.range(0, towerAdapters.length)
+                .filter(i -> towerAdapters[i].isChosen() != Integer.valueOf(i).equals(chosenTower))
                 .forEach(i -> towerAdapters[i].setChosen(Integer.valueOf(i).equals(chosenTower))));
     }
 
