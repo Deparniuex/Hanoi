@@ -11,7 +11,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-            getSystemService(UiModeManager.class).setNightMode(UiModeManager.MODE_NIGHT_NO);
+            getSystemService(UiModeManager.class).setApplicationNightMode(UiModeManager.MODE_NIGHT_NO);
         else
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
     }

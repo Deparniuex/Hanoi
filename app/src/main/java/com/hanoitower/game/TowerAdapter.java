@@ -51,6 +51,10 @@ import com.hanoitower.ringview.RingView;
             isChosen = false;
     }
 
+    public int topRingSize() {
+        return rings.length == 0 ? 0 : rings[0];
+    }
+
     public boolean isChosen() {
         return isChosen;
     }

@@ -96,11 +96,14 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     private void onClickTower(int tower) {
         // This is a compact funny way to do the same :)
         // IntStream.of(tower).forEach(stateHolder.chosenTower.getValue() == null ? stateHolder::setChosenTower : stateHolder::moveChosenRingToTower);
-        Toast.makeText(this, "recycler ".concat(Integer.toString(tower)), Toast.LENGTH_SHORT).show();
-        if (stateHolder.chosenTower.getValue() == null) {
+        final Integer fromTower = stateHolder.chosenTower.getValue();
+        if (fromTower == null) {
             if (towerAdapters[tower].getItemCount() > 0)
                 stateHolder.setChosenTower(tower);
-        } else if (stateHolder.chosenTower.getValue() == tower)
+        } else if (
+                fromTower == tower ||
+                (towerAdapters[tower].topRingSize() > 0 && towerAdapters[fromTower].topRingSize() > towerAdapters[tower].topRingSize())
+        )
             stateHolder.setChosenTower(null);
         else
             stateHolder.moveChosenRingToTower(tower);
