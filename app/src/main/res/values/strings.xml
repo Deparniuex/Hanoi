@@ -2,7 +2,9 @@
     <string name="app_name">HanoiTower</string>
     <string name="activity_game_title">Ханойские башни</string>
     <string name="exit_menu_dialog">Выйти в меню?</string>
+    <string name="exit_game">Выход из игры</string>
     <string name="exit_menu_dialog_message">Текущий прогресс будет потерян</string>
+    <string name="exit_game_dialog_message">Вы действительно хотите выйти из игры?</string>
     <string name="positive_button">Окей</string>
     <string name="negative_button">Отмена</string>
     <string name="menu_choice_text">Кол-во колец</string>
@@ -12,4 +14,5 @@
     <string name="invalid_dialog">Ошибка</string>
     <string name="invalid_dialog_message">Введите значение колец от 3 до 9</string>
     <string name="game_help_dialog_message">Жмите на одну башню, а затем на другую</string> <!-- TODO cringe message -->
+    <string name="credits_dialog_messsage">Выполнил: Федосеенко Андрей\nГруппа: 421-2</string>
 </resources>
