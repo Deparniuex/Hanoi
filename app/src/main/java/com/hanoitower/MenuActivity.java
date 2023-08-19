@@ -25,6 +25,8 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         this.findViewById(R.id.menu_game_start).setOnClickListener(this);
         this.findViewById(R.id.plus_button).setOnClickListener(this);
         this.findViewById(R.id.negative_button).setOnClickListener(this);
+        this.findViewById(R.id.exit).setOnClickListener(this);
+        this.findViewById(R.id.help_menu).setOnClickListener(this);
     }
 
     @SuppressLint("NonConstantResourceId")
@@ -55,6 +57,32 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
             }
             ringCount.setText(String.valueOf(Integer.parseInt(ringCount.getText().toString()) - 1));
         }
+        if (view.getId() == R.id.exit){
+            DialogInterface.OnClickListener listener = (dialog, button) -> {
+                if (button == Dialog.BUTTON_POSITIVE) {
+                    finish();
+                }
+            };
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.exit_game)
+                    .setMessage(R.string.exit_game_dialog_message)
+                    .setCancelable(true)
+                    .setNegativeButton(R.string.negative_button, listener)
+                    .setPositiveButton(R.string.positive_button, listener)
+                    .show();
+        }
+        if (view.getId() == R.id.help_menu){
+            showCredits();
+        }
+    }
+
+    private void showCredits() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.help_dialog)
+                .setMessage(R.string.credits_dialog_messsage)
+                .setCancelable(true)
+                .setPositiveButton(R.string.positive_button, null)
+                .show();
     }
 
     private void checkEmpty(EditText editText){
