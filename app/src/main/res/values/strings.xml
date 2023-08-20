@@ -15,4 +15,8 @@
     <string name="invalid_dialog_message">Введите значение колец от 3 до 9</string>
     <string name="game_help_dialog_message">Жмите на одну башню, а затем на другую</string> <!-- TODO cringe message -->
     <string name="credits_dialog_messsage">Выполнил: Федосеенко Андрей\nГруппа: 421-2</string>
+    <string name="win_dialog_title">Вы победили!</string>
+    <string name="win_dialog_message">Поздравляем!</string>
+    <string name="go_to_menu">Выйти в меню</string>
+    <string name="remain">Остаться</string>
 </resources>

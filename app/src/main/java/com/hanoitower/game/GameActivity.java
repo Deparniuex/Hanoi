@@ -23,6 +23,7 @@ import com.hanoitower.R;
 
 import java.util.List;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class GameActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -30,7 +31,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         int[][] towers = new int[towersCount][ringsCount];
         towers[0] = IntStream.range(1, ringsCount + 1).toArray();
         return towers;
-    }; // TODO define tower generator instead of this demo implementation
+    };
+    private final WinAuditor winAuditor = towers -> towers[2][0] != 0;
     private int ringsCount;
 
     /* These fields will be initialized after views are drawn */
@@ -46,7 +48,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         ringsCount = getIntent().getIntExtra("rings", 0);
         stateHolder = new ViewModelProvider(
                 this,
-                new StateHolderFactory(towersGenerator, ringsCount)
+                new StateHolderFactory(towersGenerator, winAuditor, ringsCount)
         ).get(StateHolder.class);
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -72,7 +74,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                     return adapter;
                 }).toArray(TowerAdapter[]::new);
         stateHolder.uiState.observe(this, towers -> {
-            if (towers instanceof StateHolder.UiState.UpdateState) { // TODO accessibility and win check
+            if (towers instanceof StateHolder.UiState.UpdateState) { // TODO accessibility and check
                 StateHolder.UiState.UpdateState state = (StateHolder.UiState.UpdateState) towers;
                 IntStream.range(0, state.towers.length).forEach(i -> towerAdapters[i].setRings(state.towers[i]));
             }
@@ -80,6 +82,10 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         stateHolder.chosenTower.observe(this, chosenTower -> IntStream.range(0, towerAdapters.length)
                 .filter(i -> towerAdapters[i].isChosen() != Integer.valueOf(i).equals(chosenTower))
                 .forEach(i -> towerAdapters[i].setChosen(Integer.valueOf(i).equals(chosenTower))));
+        stateHolder.isWon.observe(this, isWon -> {
+            if (isWon)
+                onWin();
+        });
     }
 
     @Override
@@ -95,8 +101,6 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void onClickTower(int tower) {
-        // This is a compact funny way to do the same :)
-        // IntStream.of(tower).forEach(stateHolder.chosenTower.getValue() == null ? stateHolder::setChosenTower : stateHolder::moveChosenRingToTower);
         final Integer fromTower = stateHolder.chosenTower.getValue();
         if (fromTower == null) {
             if (towerAdapters[tower].getItemCount() > 0)
@@ -110,12 +114,25 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             stateHolder.moveChosenRingToTower(tower);
     }
 
+    private void onWin() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.win_dialog_title)
+                .setMessage(R.string.win_dialog_message)
+                .setPositiveButton(getString(R.string.go_to_menu), (d, b) -> exitToMenu())
+                .setNegativeButton(getString(R.string.remain), null)
+                .setCancelable(false)
+                .show();
+    }
+
+    private void exitToMenu() {
+        startActivity(new Intent(GameActivity.this, MenuActivity.class));
+        finish();
+    }
+
     private void showExitMenuDialog() {
         DialogInterface.OnClickListener listener = (dialog, button) -> {
-            if (button == Dialog.BUTTON_POSITIVE) {
-                startActivity(new Intent(GameActivity.this, MenuActivity.class));
-                finish();
-            }
+            if (button == Dialog.BUTTON_POSITIVE)
+                exitToMenu();
         };
         new AlertDialog.Builder(this)
                 .setTitle(R.string.exit_menu_dialog)
@@ -148,10 +165,12 @@ class RecyclerViewTouchToClickPerformer implements View.OnTouchListener {
 class StateHolderFactory implements ViewModelProvider.Factory {
 
     private final TowersGenerator generator;
+    private final WinAuditor winAuditor;
     private final int rings;
 
-    public StateHolderFactory(TowersGenerator generator, int rings) {
+    public StateHolderFactory(TowersGenerator generator, WinAuditor winAuditor, int rings) {
         this.generator = generator;
+        this.winAuditor = winAuditor;
         this.rings = rings;
     }
 
@@ -160,7 +179,7 @@ class StateHolderFactory implements ViewModelProvider.Factory {
     @Override
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
         return StateHolder.class.isAssignableFrom(modelClass) ?
-                (T) new StateHolder(generator, rings) :
+                (T) new StateHolder(generator, winAuditor, rings) :
                 ViewModelProvider.Factory.super.create(modelClass);
     }
 }

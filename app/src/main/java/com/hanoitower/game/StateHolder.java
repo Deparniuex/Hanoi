@@ -11,10 +11,13 @@ import java.util.stream.Stream;
 
     public final MutableLiveData<UiState> uiState = new MutableLiveData<>();
     public final MutableLiveData<Integer> chosenTower = new MutableLiveData<>(null); // null means there is no chosen tower
+    public final MutableLiveData<Boolean> isWon = new MutableLiveData<>(false);
 
+    private final WinAuditor winAuditor;
     private final int[][] towers;
 
-    public StateHolder(TowersGenerator generator, int ringsCount) {
+    public StateHolder(TowersGenerator generator, WinAuditor winAuditor, int ringsCount) {
+        this.winAuditor = winAuditor;
         uiState.setValue(new UiState.UpdateState(trimStartingZeros(
                 towers = generator.generate(3, ringsCount)
         )));
@@ -36,6 +39,8 @@ import java.util.stream.Stream;
         fromTower[fromIndex] = 0;
         chosenTower.setValue(null);
         uiState.setValue(new UiState.UpdateState(trimStartingZeros(towers)));
+        if (Boolean.FALSE.equals(isWon.getValue()) && winAuditor.isCompleted(towers))
+            isWon.setValue(true);
     }
 
     private static int startingZerosCount(int[] arr) {
@@ -56,22 +61,15 @@ import java.util.stream.Stream;
     public interface UiState {
         class UpdateState implements UiState {
             public final int[][] towers;
-            public final boolean
-                    isAccessible, // whether user can interact with towers
-                    hasWon; // whether user completed task
+            public final boolean isAccessible; // whether user can interact with towers
 
             public UpdateState(int[][] towers) {
                 this(towers, true);
             }
 
             public UpdateState(int[][] towers, boolean isAccessible) {
-                this(towers, isAccessible, false);
-            }
-
-            public UpdateState(int[][] towers, boolean isAccessible, boolean hasWon) {
                 this.towers = towers;
                 this.isAccessible = isAccessible;
-                this.hasWon = hasWon;
             }
         }
     }
