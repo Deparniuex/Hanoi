@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,6 +28,12 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         this.findViewById(R.id.negative_button).setOnClickListener(this);
         this.findViewById(R.id.exit).setOnClickListener(this);
         this.findViewById(R.id.help_menu).setOnClickListener(this);
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                showExitDialog();
+            }
+        });
     }
 
     @SuppressLint("NonConstantResourceId")
@@ -58,22 +65,26 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
             ringCount.setText(String.valueOf(Integer.parseInt(ringCount.getText().toString()) - 1));
         }
         if (view.getId() == R.id.exit){
-            DialogInterface.OnClickListener listener = (dialog, button) -> {
-                if (button == Dialog.BUTTON_POSITIVE) {
-                    finish();
-                }
-            };
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.exit_game)
-                    .setMessage(R.string.exit_game_dialog_message)
-                    .setCancelable(true)
-                    .setNegativeButton(R.string.negative_button, listener)
-                    .setPositiveButton(R.string.positive_button, listener)
-                    .show();
+            showExitDialog();
         }
         if (view.getId() == R.id.help_menu){
             showCredits();
         }
+    }
+
+    private void showExitDialog() {
+        DialogInterface.OnClickListener listener = (dialog, button) -> {
+            if (button == Dialog.BUTTON_POSITIVE) {
+                finish();
+            }
+        };
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.exit_game)
+                .setMessage(R.string.exit_game_dialog_message)
+                .setCancelable(true)
+                .setNegativeButton(R.string.negative_button, listener)
+                .setPositiveButton(R.string.positive_button, listener)
+                .show();
     }
 
     private void showCredits() {
