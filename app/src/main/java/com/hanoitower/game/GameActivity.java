@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -18,12 +17,12 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.hanoitower.MenuActivity;
 import com.hanoitower.R;
 
 import java.util.List;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class GameActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -33,22 +32,59 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         return towers;
     };
     private final WinAuditor winAuditor = towers -> towers[2][0] != 0;
+    private final GameSolver gameSolver = towers -> {
+        class Solver {
+            /**
+             * @return first ring or length of array if there is no rings on this tower
+             */
+            private int findTopRingIndex(int[] tower) {
+                return IntStream.range(0, tower.length)
+                        .filter(i -> tower[i] != 0)
+                        .findFirst()
+                        .orElse(tower.length);
+            }
+
+            public IntStream solve(int[][] towers, int fromTower, int toTower, int ringIndex) {
+                if (ringIndex == 0 || towers[fromTower][ringIndex - 1] == 0) {
+                    towers[toTower][findTopRingIndex(towers[toTower]) - 1] = towers[fromTower][ringIndex];
+                    towers[fromTower][ringIndex] = 0;
+                    return IntStream.of(fromTower, toTower);
+                }
+                int bufferTower = IntStream.range(0, towers.length).filter(i -> i != fromTower && i != toTower).findAny().orElseThrow(
+                        RuntimeException::new // unreachable (of course for 3 and more towers)
+                );
+                int bufferedRing = findTopRingIndex(towers[bufferTower]) - 1;
+                return IntStream.concat(
+                        IntStream.concat(
+                                solve(towers, fromTower, bufferTower, ringIndex - 1),
+                                solve(towers, fromTower, toTower, ringIndex)
+                        ), solve(towers, bufferTower, toTower, bufferedRing)
+                );
+            }
+        }
+        return new Solver().solve(towers, 0, 2, towers[0].length - 1).toArray();
+    };
     private int ringsCount;
 
     /* These fields will be initialized after views are drawn */
     private StateHolder stateHolder;
     private TowerAdapter[] towerAdapters;
 
+    /* Views */
+    private FloatingActionButton playButton;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+        playButton = (FloatingActionButton) findViewById(R.id.play_button);
+        playButton.setOnClickListener(this);
         findViewById(R.id.exit_to_menu).setOnClickListener(this);
         findViewById(R.id.help).setOnClickListener(this);
         ringsCount = getIntent().getIntExtra("rings", 0);
         stateHolder = new ViewModelProvider(
                 this,
-                new StateHolderFactory(towersGenerator, winAuditor, ringsCount)
+                new StateHolderFactory(towersGenerator, winAuditor, gameSolver, ringsCount)
         ).get(StateHolder.class);
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -73,12 +109,11 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                     view.setOnClickListener(this);
                     return adapter;
                 }).toArray(TowerAdapter[]::new);
-        stateHolder.uiState.observe(this, towers -> {
-            if (towers instanceof StateHolder.UiState.UpdateState) { // TODO accessibility and check
-                StateHolder.UiState.UpdateState state = (StateHolder.UiState.UpdateState) towers;
-                IntStream.range(0, state.towers.length).forEach(i -> towerAdapters[i].setRings(state.towers[i]));
-            }
-        });
+        stateHolder.towersState.observe(this, towers -> IntStream.range(0, towers.length).forEach(
+                    i -> towerAdapters[i].setRings(towers[i])
+        ));
+        stateHolder.isAccessible.observe(this, isAccessible ->
+                playButton.setImageResource(isAccessible ? R.drawable.ic_play : R.drawable.ic_stop));
         stateHolder.chosenTower.observe(this, chosenTower -> IntStream.range(0, towerAdapters.length)
                 .filter(i -> towerAdapters[i].isChosen() != Integer.valueOf(i).equals(chosenTower))
                 .forEach(i -> towerAdapters[i].setChosen(Integer.valueOf(i).equals(chosenTower))));
@@ -92,11 +127,16 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         List<Integer> towersIds = List.of(R.id.tower1, R.id.tower2, R.id.tower3);
         final int tower;
-        if (view.getId() == R.id.exit_to_menu)
+        if (view.getId() == R.id.play_button) {
+            if (Boolean.TRUE.equals(stateHolder.isAccessible.getValue()))
+                stateHolder.startAutoSolving();
+            else
+                stateHolder.stopAutoSolving();
+        } else if (view.getId() == R.id.exit_to_menu)
             showExitMenuDialog();
         else if (view.getId() == R.id.help)
             showHelpDialog();
-        else if ((tower = towersIds.indexOf(view.getId())) != -1)
+        else if ((tower = towersIds.indexOf(view.getId())) != -1 && Boolean.TRUE.equals(stateHolder.isAccessible.getValue()))
             onClickTower(tower);
     }
 
@@ -166,11 +206,13 @@ class StateHolderFactory implements ViewModelProvider.Factory {
 
     private final TowersGenerator generator;
     private final WinAuditor winAuditor;
+    private final GameSolver solver;
     private final int rings;
 
-    public StateHolderFactory(TowersGenerator generator, WinAuditor winAuditor, int rings) {
+    public StateHolderFactory(TowersGenerator generator, WinAuditor winAuditor, GameSolver solver, int rings) {
         this.generator = generator;
         this.winAuditor = winAuditor;
+        this.solver = solver;
         this.rings = rings;
     }
 
@@ -179,7 +221,7 @@ class StateHolderFactory implements ViewModelProvider.Factory {
     @Override
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
         return StateHolder.class.isAssignableFrom(modelClass) ?
-                (T) new StateHolder(generator, winAuditor, rings) :
+                (T) new StateHolder(generator, winAuditor, solver, rings) :
                 ViewModelProvider.Factory.super.create(modelClass);
     }
 }

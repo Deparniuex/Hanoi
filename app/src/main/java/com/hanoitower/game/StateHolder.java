@@ -1,26 +1,39 @@
 package com.hanoitower.game;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import androidx.annotation.Nullable;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /* package-private */ class StateHolder extends ViewModel {
+    private final static int
+            DElAY_CHOOSE = 200,
+            DELAY_MOVE = 1000;
 
-    public final MutableLiveData<UiState> uiState = new MutableLiveData<>();
+    public final MutableLiveData<int[][]> towersState = new MutableLiveData<>();
+    public final MutableLiveData<Boolean> isAccessible = new MutableLiveData<>(true);
     public final MutableLiveData<Integer> chosenTower = new MutableLiveData<>(null); // null means there is no chosen tower
     public final MutableLiveData<Boolean> isWon = new MutableLiveData<>(false);
 
     private final WinAuditor winAuditor;
+    private final GameSolver solver;
     private final int[][] towers;
+    private Timer autoSolveTimer;
+    private final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
 
-    public StateHolder(TowersGenerator generator, WinAuditor winAuditor, int ringsCount) {
+    public StateHolder(TowersGenerator generator, WinAuditor winAuditor, GameSolver solver, int ringsCount) {
         this.winAuditor = winAuditor;
-        uiState.setValue(new UiState.UpdateState(trimStartingZeros(
+        this.solver = solver;
+        towersState.setValue(trimStartingZeros(
                 towers = generator.generate(3, ringsCount)
-        )));
+        ));
     }
 
     /**
@@ -33,14 +46,60 @@ import java.util.stream.Stream;
     public void moveChosenRingToTower(int tower) {
         if (chosenTower.getValue() == null)
             throw new IllegalStateException("There is no chosen tower to move ring from");
-        int[] fromTower = towers[chosenTower.getValue()];
-        int fromIndex = startingZerosCount(fromTower);
-        towers[tower][startingZerosCount(towers[tower]) - 1] = fromTower[fromIndex];
+        int[]
+                fromTower = towers[chosenTower.getValue()],
+                toTower = towers[tower];
+        int
+                fromIndex = startingZerosCount(fromTower),
+                toIndex = startingZerosCount(toTower) - 1;
+        toTower[toIndex] = fromTower[fromIndex];
         fromTower[fromIndex] = 0;
         chosenTower.setValue(null);
-        uiState.setValue(new UiState.UpdateState(trimStartingZeros(towers)));
+        towersState.setValue(trimStartingZeros(towers));
         if (Boolean.FALSE.equals(isWon.getValue()) && winAuditor.isCompleted(towers))
             isWon.setValue(true);
+    }
+
+    public void startAutoSolving() {
+        if (autoSolveTimer != null)
+            throw new IllegalStateException("Auto solving is already started");
+        autoSolveTimer = new Timer();
+        int[] moves = solver.solve(Stream.of(towers).map(arr -> IntStream.of(arr).toArray()).toArray(int[][]::new));
+        class Task extends TimerTask {
+            private final int index;
+
+            public Task() {
+                this(0);
+            }
+
+            public Task(int index) {
+                this.index = index;
+            }
+
+            @Override
+            public void run() {
+                mainThreadHandler.post(() -> {
+                    if (index % 2 == 0)
+                        setChosenTower(moves[index]);
+                    else
+                        moveChosenRingToTower(moves[index]);
+                    if (index + 1 < moves.length)
+                        autoSolveTimer.schedule(new Task(index + 1), (index + 1) % 2 == 0 ? DElAY_CHOOSE : DELAY_MOVE);
+                    else
+                        stopAutoSolving();
+                });
+            }
+        }
+        isAccessible.setValue(false);
+        autoSolveTimer.schedule(new Task(), DElAY_CHOOSE);
+    }
+
+    public void stopAutoSolving() {
+        if (autoSolveTimer == null)
+            throw new IllegalStateException("Auto solving is not started");
+        autoSolveTimer.cancel();
+        autoSolveTimer = null;
+        isAccessible.setValue(true);
     }
 
     private static int startingZerosCount(int[] arr) {
@@ -56,21 +115,5 @@ import java.util.stream.Stream;
                 System.arraycopy(subArr, firstNonZeroValue, rings, 0, rings.length);
             return rings;
         }).toArray(int[][]::new);
-    }
-
-    public interface UiState {
-        class UpdateState implements UiState {
-            public final int[][] towers;
-            public final boolean isAccessible; // whether user can interact with towers
-
-            public UpdateState(int[][] towers) {
-                this(towers, true);
-            }
-
-            public UpdateState(int[][] towers, boolean isAccessible) {
-                this.towers = towers;
-                this.isAccessible = isAccessible;
-            }
-        }
     }
 }
