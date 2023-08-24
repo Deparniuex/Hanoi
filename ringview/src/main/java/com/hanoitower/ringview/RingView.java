@@ -56,7 +56,7 @@ public class RingView extends View {
                 radius = getHeight() / 2f;
         paint.setColor(ringColor.getColorForState(getDrawableState(), ringColor.getDefaultColor()));
         canvas.drawRoundRect(
-                gap, 0, getWidth() - gap, getHeight() - 1, // actually getHeight() is still in y bounds
+                gap, 0, getWidth() - gap, getHeight(), // actually getHeight() is still in y bounds
                 radius, radius,
                 paint
         );

@@ -102,7 +102,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                     TowerAdapter adapter = new TowerAdapter(
                             this,
                             ringsCount,
-                            view.getHeight() / ringsCount
+                            Math.min((int) (40 * getResources().getDisplayMetrics().density), view.getHeight() / ringsCount)
                     );
                     view.setAdapter(adapter);
                     view.setOnTouchListener(new RecyclerViewTouchToClickPerformer());
