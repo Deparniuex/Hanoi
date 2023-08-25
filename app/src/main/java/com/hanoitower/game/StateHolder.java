@@ -3,10 +3,12 @@ package com.hanoitower.game;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.IntStream;
@@ -17,7 +19,7 @@ import java.util.stream.Stream;
             DElAY_CHOOSE = 200,
             DELAY_MOVE = 1000;
 
-    public final MutableLiveData<int[][]> towersState = new MutableLiveData<>();
+    public final MutableLiveData<Ring[][]> towersState = new MutableLiveData<>();
     public final MutableLiveData<Boolean> isAccessible = new MutableLiveData<>(true);
     public final MutableLiveData<Integer> chosenTower = new MutableLiveData<>(null); // null means there is no chosen tower
     public final MutableLiveData<Boolean> isWon = new MutableLiveData<>(false);
@@ -25,15 +27,17 @@ import java.util.stream.Stream;
     private final WinAuditor winAuditor;
     private final GameSolver solver;
     private final int[][] towers;
-    private Timer autoSolveTimer;
+    private final int[] ringsColor;
     private final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
+    private final Random rand = new Random(System.currentTimeMillis());
+    private Timer autoSolveTimer;
 
     public StateHolder(TowersGenerator generator, WinAuditor winAuditor, GameSolver solver, int ringsCount) {
         this.winAuditor = winAuditor;
         this.solver = solver;
-        towersState.setValue(trimStartingZeros(
-                towers = generator.generate(3, ringsCount)
-        ));
+        towers = generator.generate(3, ringsCount);
+        ringsColor = IntStream.range(0, ringsCount).map(i -> generateColor()).toArray();
+        exposeTowers();
     }
 
     /**
@@ -55,7 +59,7 @@ import java.util.stream.Stream;
         toTower[toIndex] = fromTower[fromIndex];
         fromTower[fromIndex] = 0;
         chosenTower.setValue(null);
-        towersState.setValue(trimStartingZeros(towers));
+        exposeTowers();
         if (Boolean.FALSE.equals(isWon.getValue()) && winAuditor.isCompleted(towers))
             isWon.setValue(true);
     }
@@ -100,6 +104,25 @@ import java.util.stream.Stream;
         autoSolveTimer.cancel();
         autoSolveTimer = null;
         isAccessible.setValue(true);
+    }
+
+    private void exposeTowers() {
+        towersState.setValue(
+                Stream.of(trimStartingZeros(towers)).map(
+                        tower -> IntStream.of(tower).mapToObj(
+                                ring -> new Ring(ring, ringsColor[ring - 1])
+                        ).toArray(Ring[]::new)
+                ).toArray(Ring[][]::new)
+        );
+    }
+
+    @ColorInt
+    private int generateColor() {
+        int
+                r = rand.nextInt(256),
+                g = rand.nextInt(256),
+                b = 256 * 2 - r - g;
+        return (int) (b + 256 * (g + 256 * (r + 256L * 255)));
     }
 
     private static int startingZerosCount(int[] arr) {

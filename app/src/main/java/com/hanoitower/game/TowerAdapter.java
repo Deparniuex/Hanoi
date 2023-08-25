@@ -2,9 +2,11 @@ package com.hanoitower.game;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -16,7 +18,7 @@ import com.hanoitower.ringview.RingView;
     private final int maxRing, ringHeight;
     private boolean isChosen = false;
     @NonNull
-    private int[] rings = {};
+    private Ring[] rings = {};
 
     public TowerAdapter(@NonNull Context context, int maxRing, int ringHeight) {
         this.inflater = LayoutInflater.from(context);
@@ -44,7 +46,7 @@ import com.hanoitower.ringview.RingView;
      * Notifies itself about changes on its own
      */
     @SuppressLint("NotifyDataSetChanged")
-    public void setRings(@NonNull int[] rings) {
+    public void setRings(@NonNull Ring[] rings) {
         this.rings = rings;
         notifyDataSetChanged();
         if (rings.length == 0)
@@ -52,7 +54,7 @@ import com.hanoitower.ringview.RingView;
     }
 
     public int topRingSize() {
-        return rings.length == 0 ? 0 : rings[0];
+        return rings.length == 0 ? 0 : rings[0].getSize();
     }
 
     public boolean isChosen() {
@@ -83,9 +85,23 @@ import com.hanoitower.ringview.RingView;
             ));
         }
 
-        private void bind(int ring) {
-            ringView.setRingLevel(ring);
+        private void bind(Ring ring) {
+            ringView.setRingLevel(ring.getSize());
+            ringView.setRingColor(new ColorStateList(
+                    new int[][] {{-com.hanoitower.ringview.R.attr.state_pointer}, {com.hanoitower.ringview.R.attr.state_pointer}},
+                    new int[] {ring.getColor(), getTranslucentColor(ring.getColor(), 128)}
+            ));
             ringView.setAtPointer(isChosen && getAdapterPosition() == 0);
         }
+    }
+
+    @ColorInt
+    private static int getTranslucentColor(@ColorInt int rgb, int opacity) {
+        long
+                RGB = rgb < 0 ? ((long) rgb - Integer.MIN_VALUE + Integer.MAX_VALUE + 1) : (long) rgb,
+                r = RGB / 256 / 256 % 256,
+                g = RGB / 256 % 256,
+                b = RGB % 256;
+        return (int) (b + 256 * (g + 256 * (r + 256 * opacity)));
     }
 }
