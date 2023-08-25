@@ -4,7 +4,10 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.Image;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -18,11 +21,46 @@ import com.hanoitower.game.GameActivity;
 
 public class MenuActivity extends AppCompatActivity implements View.OnClickListener {
     private EditText ringCount;
+    private ImageButton plusButton;
+    private ImageButton negativeButton;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.menu_activity);
         ringCount = (EditText) findViewById(R.id.menu_edit_text);
+        negativeButton = (ImageButton) findViewById(R.id.negative_button);
+        plusButton = (ImageButton) findViewById(R.id.plus_button);
+        ringCount.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (ringCount.getText().toString().isEmpty()) {
+                    plusButton.setEnabled(false);
+                    negativeButton.setEnabled(false);
+                    return;
+                }else{
+                if (Integer.parseInt(ringCount.getText().toString()) >= 9) {
+                    plusButton.setEnabled(false);
+                    negativeButton.setEnabled(true);
+                }
+                else if (Integer.parseInt(ringCount.getText().toString()) <= 3) {
+                    plusButton.setEnabled(true);
+                    negativeButton.setEnabled(false);
+                }else{
+                    plusButton.setEnabled(true);
+                    negativeButton.setEnabled(true);
+                }
+            }}
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
         this.findViewById(R.id.menu_game_start).setOnClickListener(this);
         this.findViewById(R.id.plus_button).setOnClickListener(this);
         this.findViewById(R.id.negative_button).setOnClickListener(this);
@@ -50,19 +88,17 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
                 finish();
             }
         }
-        if (view.getId() == R.id.plus_button) {
-            checkEmpty(ringCount);
-            if (Integer.parseInt(ringCount.getText().toString()) == 9){
-                ringCount.setText("2");
+        if (view.getId() == R.id.plus_button || view.getId() == R.id.negative_button) {
+            int value = Integer.parseInt(ringCount.getText().toString()) + (view.getId()==R.id.plus_button?1:-1);
+            ringCount.setText(Integer.toString(value));
+            if (value <= 3) {
+                negativeButton.setEnabled(false);
+                plusButton.setEnabled(true);
             }
-             ringCount.setText(String.valueOf(Integer.parseInt(ringCount.getText().toString()) + 1));
-        }
-        if (view.getId() == R.id.negative_button) {
-            checkEmpty(ringCount);
-            if (Integer.parseInt(ringCount.getText().toString()) <= 3){
-                ringCount.setText("4");
+            else if (value >= 9){
+                plusButton.setEnabled(false);
+                negativeButton.setEnabled(true);
             }
-            ringCount.setText(String.valueOf(Integer.parseInt(ringCount.getText().toString()) - 1));
         }
         if (view.getId() == R.id.exit){
             showExitDialog();
@@ -71,6 +107,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
             showCredits();
         }
     }
+
 
     private void showExitDialog() {
         DialogInterface.OnClickListener listener = (dialog, button) -> {
@@ -94,12 +131,6 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
                 .setCancelable(true)
                 .setPositiveButton(R.string.positive_button, null)
                 .show();
-    }
-
-    private void checkEmpty(EditText editText){
-        if (editText.getText().toString().isEmpty()) {
-            ringCount.setText("0");
-        }
     }
     private void showInvalidInputDialog(){
         new AlertDialog.Builder(this)
