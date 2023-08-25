@@ -30,6 +30,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         ringCount = (EditText) findViewById(R.id.menu_edit_text);
         negativeButton = (ImageButton) findViewById(R.id.negative_button);
         plusButton = (ImageButton) findViewById(R.id.plus_button);
+        negativeButton.setEnabled(false);
         ringCount.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -41,7 +42,6 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
                 if (ringCount.getText().toString().isEmpty()) {
                     plusButton.setEnabled(false);
                     negativeButton.setEnabled(false);
-                    return;
                 }else{
                 if (Integer.parseInt(ringCount.getText().toString()) >= 9) {
                     plusButton.setEnabled(false);
