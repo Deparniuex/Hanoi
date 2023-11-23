@@ -26,44 +26,6 @@ import java.util.stream.IntStream;
 
 public class GameActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private final TowersGenerator towersGenerator = (towersCount, ringsCount) -> {
-        int[][] towers = new int[towersCount][ringsCount];
-        towers[0] = IntStream.range(1, ringsCount + 1).toArray();
-        return towers;
-    };
-    private final WinAuditor winAuditor = towers -> towers[2][0] != 0;
-    private final GameSolver gameSolver = towers -> {
-        class Solver {
-            /**
-             * @return first ring or length of array if there is no rings on this tower
-             */
-            private int findTopRingIndex(int[] tower) {
-                return IntStream.range(0, tower.length)
-                        .filter(i -> tower[i] != 0)
-                        .findFirst()
-                        .orElse(tower.length);
-            }
-
-            public IntStream solve(int[][] towers, int fromTower, int toTower, int ringIndex) {
-                if (ringIndex == 0 || towers[fromTower][ringIndex - 1] == 0) {
-                    towers[toTower][findTopRingIndex(towers[toTower]) - 1] = towers[fromTower][ringIndex];
-                    towers[fromTower][ringIndex] = 0;
-                    return IntStream.of(fromTower, toTower);
-                }
-                int bufferTower = IntStream.range(0, towers.length).filter(i -> i != fromTower && i != toTower).findAny().orElseThrow(
-                        RuntimeException::new // unreachable (of course for 3 and more towers)
-                );
-                int bufferedRing = findTopRingIndex(towers[bufferTower]) - 1;
-                return IntStream.concat(
-                        IntStream.concat(
-                                solve(towers, fromTower, bufferTower, ringIndex - 1),
-                                solve(towers, fromTower, toTower, ringIndex)
-                        ), solve(towers, bufferTower, toTower, bufferedRing)
-                );
-            }
-        }
-        return new Solver().solve(towers, 0, 2, towers[0].length - 1).toArray();
-    };
     private int ringsCount;
 
     /* These fields will be initialized after views are drawn */
@@ -84,7 +46,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         ringsCount = getIntent().getIntExtra("rings", 0);
         stateHolder = new ViewModelProvider(
                 this,
-                new StateHolderFactory(towersGenerator, winAuditor, gameSolver, ringsCount)
+                new StateHolderFactory(new BaseGameRules(), ringsCount)
         ).get(StateHolder.class);
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -204,15 +166,11 @@ class RecyclerViewTouchToClickPerformer implements View.OnTouchListener {
 
 class StateHolderFactory implements ViewModelProvider.Factory {
 
-    private final TowersGenerator generator;
-    private final WinAuditor winAuditor;
-    private final GameSolver solver;
+    private final GameRules rules;
     private final int rings;
 
-    public StateHolderFactory(TowersGenerator generator, WinAuditor winAuditor, GameSolver solver, int rings) {
-        this.generator = generator;
-        this.winAuditor = winAuditor;
-        this.solver = solver;
+    public StateHolderFactory(GameRules rules, int rings) {
+        this.rules = rules;
         this.rings = rings;
     }
 
@@ -221,7 +179,7 @@ class StateHolderFactory implements ViewModelProvider.Factory {
     @Override
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
         return StateHolder.class.isAssignableFrom(modelClass) ?
-                (T) new StateHolder(generator, winAuditor, solver, rings) :
+                (T) new StateHolder(rules, rings) :
                 ViewModelProvider.Factory.super.create(modelClass);
     }
 }

@@ -24,18 +24,16 @@ import java.util.stream.Stream;
     public final MutableLiveData<Integer> chosenTower = new MutableLiveData<>(null); // null means there is no chosen tower
     public final MutableLiveData<Boolean> isWon = new MutableLiveData<>(false);
 
-    private final WinAuditor winAuditor;
-    private final GameSolver solver;
+    private final GameRules rules;
     private final int[][] towers;
     private final int[] ringsColor;
     private final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
     private final Random rand = new Random(System.currentTimeMillis());
     private Timer autoSolveTimer;
 
-    public StateHolder(TowersGenerator generator, WinAuditor winAuditor, GameSolver solver, int ringsCount) {
-        this.winAuditor = winAuditor;
-        this.solver = solver;
-        towers = generator.generate(3, ringsCount);
+    public StateHolder(GameRules rules, int ringsCount) {
+        this.rules = rules;
+        towers = rules.getTowersGenerator().generate(3, ringsCount);
         ringsColor = IntStream.range(0, ringsCount).map(i -> generateColor()).toArray();
         exposeTowers();
     }
@@ -60,7 +58,7 @@ import java.util.stream.Stream;
         fromTower[fromIndex] = 0;
         chosenTower.setValue(null);
         exposeTowers();
-        if (Boolean.FALSE.equals(isWon.getValue()) && winAuditor.isCompleted(towers))
+        if (Boolean.FALSE.equals(isWon.getValue()) && rules.getWinAuditor().isCompleted(towers))
             isWon.setValue(true);
     }
 
@@ -68,7 +66,9 @@ import java.util.stream.Stream;
         if (autoSolveTimer != null)
             throw new IllegalStateException("Auto solving is already started");
         autoSolveTimer = new Timer();
-        int[] moves = solver.solve(Stream.of(towers).map(arr -> IntStream.of(arr).toArray()).toArray(int[][]::new));
+        int[] moves = rules.getGameSolver().solve(
+                Stream.of(towers).map(arr -> IntStream.of(arr).toArray()).toArray(int[][]::new)
+        );
         class Task extends TimerTask {
             private final int index;
 
